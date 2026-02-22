@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   Palette sémantique Apple — Dark & Light
+   Toutes les couleurs changent automatiquement avec le thème.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:               #000000;
+  --bg-secondary:     #1c1c1e;
+  --bg-elevated:      #2c2c2e;
+  --bg-hover:         #3a3a3c;
+
+  --text-primary:     #f5f5f7;
+  --text-secondary:   rgba(235, 235, 245, 0.6);
+  --text-tertiary:    rgba(235, 235, 245, 0.3);
+
+  --border:           rgba(84, 84, 88, 0.36);
+  --border-light:     rgba(84, 84, 88, 0.18);
+
+  --accent:           #0A84FF;
+  --accent-hover:     #0071e3;
+  --accent-bg:        rgba(10, 132, 255, 0.12);
+  --accent-border:    rgba(10, 132, 255, 0.25);
+
+  --fill:             rgba(120, 120, 128, 0.24);
+  --fill-secondary:   rgba(120, 120, 128, 0.16);
+}
+
+html.light {
+  --bg:               #ffffff;
+  --bg-secondary:     #f2f2f7;
+  --bg-elevated:      #e5e5ea;
+  --bg-hover:         #d1d1d6;
+
+  --text-primary:     #1d1d1f;
+  --text-secondary:   rgba(60, 60, 67, 0.6);
+  --text-tertiary:    rgba(60, 60, 67, 0.3);
+
+  --border:           rgba(60, 60, 67, 0.18);
+  --border-light:     rgba(60, 60, 67, 0.12);
+
+  --accent:           #007AFF;
+  --accent-hover:     #0051d5;
+  --accent-bg:        rgba(0, 122, 255, 0.08);
+  --accent-border:    rgba(0, 122, 255, 0.2);
+
+  --fill:             rgba(120, 120, 128, 0.12);
+  --fill-secondary:   rgba(120, 120, 128, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   @utility — classes adaptatives utilisables avec hover:, focus:, etc.
+   ═══════════════════════════════════════════════════════════ */
+
+@utility t-primary   { color: var(--text-primary); }
+@utility t-secondary { color: var(--text-secondary); }
+@utility t-tertiary  { color: var(--text-tertiary); }
+@utility t-accent    { color: var(--accent); }
+
+@utility bg-page     { background-color: var(--bg); }
+@utility bg-surface  { background-color: var(--bg-secondary); }
+@utility bg-elevated { background-color: var(--bg-elevated); }
+@utility bg-fill     { background-color: var(--fill); }
+@utility bg-fill-s   { background-color: var(--fill-secondary); }
+@utility bg-accent-s { background-color: var(--accent-bg); }
+
+@utility bdr         { border-color: var(--border); }
+@utility bdr-light   { border-color: var(--border-light); }
+@utility bdr-accent  { border-color: var(--accent-border); }
+
+/* Variantes hover et group-hover — uniquement quand la souris peut survoler */
+@media (hover: hover) {
+  .hover\:t-primary:hover { color: var(--text-primary) !important; }
+  .hover\:t-secondary:hover { color: var(--text-secondary) !important; }
+  .hover\:t-tertiary:hover { color: var(--text-tertiary) !important; }
+  .hover\:t-accent:hover { color: var(--accent) !important; }
+
+  .hover\:bg-fill-s:hover { background-color: var(--fill-secondary) !important; }
+  .hover\:bg-fill:hover { background-color: var(--fill) !important; }
+  .hover\:bg-elevated:hover { background-color: var(--bg-elevated) !important; }
+
+  .group:hover .group-hover\:t-primary { color: var(--text-primary) !important; }
+  .group:hover .group-hover\:t-secondary { color: var(--text-secondary) !important; }
+  .group:hover .group-hover\:t-accent { color: var(--accent) !important; }
+
+  .group:hover .group-hover\:bg-accent-s { background-color: var(--accent-bg) !important; }
+  .group:hover .group-hover\:bdr-accent { border-color: var(--accent-border) !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Tailwind @theme tokens (compatibilité & animation)
+   ═══════════════════════════════════════════════════════════ */
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out 3s infinite;
+
+  --color-dark-950: #000000;
+  --color-dark-900: #0a0a0a;
+  --color-dark-800: #1c1c1e;
+  --color-dark-700: #2c2c2e;
+  --color-dark-600: #3a3a3c;
+  --color-dark-500: #48484a;
+  --color-accent-400: #0A84FF;
+  --color-accent-500: #007AFF;
+  --color-accent-600: #0051d5;
+  --color-cyan-400: #007AFF;
+  --color-cyan-500: #007AFF;
+  --color-emerald-400: #34c759;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Keyframes
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--accent) }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════════ */
+
+* { scrollbar-width: thin; scrollbar-color: var(--fill) transparent; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg);
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Composants
+   ═══════════════════════════════════════════════════════════ */
+
+.gradient-text { color: var(--text-primary); }
+
+.gradient-bg {
+  background-color: var(--accent);
+  height: 2px;
+  width: 48px;
+}
+
+.glass {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.glass-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 18px;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.glass-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--bg) 30%, transparent);
+}
+
+.orb { display: none; }
+
+.section-container {
+  max-width: 980px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 640px) { .section-container { padding-inline: 2rem; } }
+@media (min-width: 1024px) { .section-container { padding-inline: 2.5rem; } }
+
+/* Bouton principal */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; border-radius: 980px;
+  font-weight: 500; font-size: 1rem;
+  color: #fff; background: var(--accent); border: none;
+  transition: background-color 0.2s, transform 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover); transform: scale(1.02); color: #fff; }
+
+/* Bouton secondaire */
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; border-radius: 980px;
+  font-weight: 500; font-size: 1rem;
+  color: var(--text-primary); background: transparent;
+  border: 1px solid var(--border);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.btn-secondary:hover {
+  background: var(--fill-secondary);
+  border-color: var(--border);
+  transform: scale(1.02);
+}
+
+/* Tags */
+.skill-tag {
+  padding: 0.375rem 0.75rem; border-radius: 12px;
+  font-size: 0.8125rem; font-weight: 500;
+  background: var(--fill-secondary); border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.skill-tag:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+/* Champs de formulaire */
+.input-themed {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-themed::placeholder { color: var(--text-tertiary); }
+.input-themed:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Print — CV identique à l'affichage écran
+   ═══════════════════════════════════════════════════════════ */
+
+@media print {
+  @page { margin: 0.6in; size: A4; }
+  body {
+    background: white !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print { display: none !important; }
+  .print-break-inside-avoid { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Couleurs sémantiques → mêmes contrastes qu'à l'écran (version imprimable) */
+  .t-primary, .gradient-text { color: #111827 !important; }
+  .t-secondary { color: #4b5563 !important; }
+  .t-tertiary { color: #6b7280 !important; }
+  .t-accent { color: #007AFF !important; }
+
+  /* Carte CV : fond blanc, bordure légère, padding identique à l'écran pour même rendu */
+  .glass-card {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    border-radius: 0.75rem !important;
+    padding: 2.5rem !important;
+  }
+
+  /* Conteneur CV : pleine largeur avec marges page, pas de padding supplémentaire */
+  .section-container { max-width: 100% !important; padding-inline: 0.25in !important; }
+  .glass-card .space-y-8 > * + * { margin-top: 1.5rem !important; }
+  .glass-card .space-y-6 > * + * { margin-top: 1.25rem !important; }
+  .glass-card .space-y-4 > * + * { margin-top: 1rem !important; }
+
+  /* Bordures visibles en impression */
+  .border-b.bdr-light, .border-t.bdr-light { border-color: #e5e7eb !important; }
+}
