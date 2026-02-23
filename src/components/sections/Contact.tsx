@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Send, Mail, MapPin, Phone, Github, Linkedin, CheckCircle } from 'lucide-react';
 import SectionTitle from '../ui/SectionTitle';
-import { defaultLinks, resumeContact } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui } from '../../i18n';
 
 export default function Contact() {
@@ -10,6 +10,7 @@ export default function Contact() {
   const [sent, setSent] = useState(false);
   const { lang } = useLanguage();
   const t = ui[lang].contact;
+  const { links: defaultLinks, resumeContact } = useSiteData();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

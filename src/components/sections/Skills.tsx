@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Monitor, Wrench, Brain, Code } from 'lucide-react';
 import SectionTitle from '../ui/SectionTitle';
-import { defaultSkillCategories } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enSkillCategories } from '../../i18n';
 
 const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -14,7 +14,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 export default function Skills() {
   const { lang } = useLanguage();
   const t = ui[lang].skills;
-  const categories = lang === 'en' ? enSkillCategories : defaultSkillCategories;
+  const { skillCategories } = useSiteData();
+  const categories = lang === 'en' ? enSkillCategories : skillCategories;
 
   return (
     <section id="skills" className="relative py-24 sm:py-32">

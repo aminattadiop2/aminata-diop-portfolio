@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { User, GraduationCap, BookOpen, FlaskConical } from 'lucide-react';
 import SectionTitle from '../ui/SectionTitle';
-import { defaultSections } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enAbout } from '../../i18n';
 
 const highlightIcons = [GraduationCap, BookOpen, FlaskConical];
@@ -10,11 +10,12 @@ export default function About() {
   const { lang } = useLanguage();
   const t = ui[lang].about;
   const isEn = lang === 'en';
+  const { sections } = useSiteData();
 
-  const content = isEn ? enAbout.content : (defaultSections.about.content || '');
+  const content = isEn ? enAbout.content : (sections.about.content || '');
   const highlights: string[] = isEn
     ? enAbout.highlights
-    : (() => { try { return JSON.parse(defaultSections.about.metadata || '{}').highlights || []; } catch { return []; } })();
+    : (() => { try { return JSON.parse(sections.about.metadata || '{}').highlights || []; } catch { return []; } })();
   const paragraphs = content.split('\n\n');
 
   return (

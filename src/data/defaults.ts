@@ -418,34 +418,3 @@ export const resumeContact = {
   phone: '514 942 7793',
 };
 
-// ——— Hydratation depuis localStorage ———
-(function hydrate() {
-  const KEY = 'ad_';
-  function load<T>(k: string): T | null {
-    try { const r = localStorage.getItem(KEY + k); return r ? JSON.parse(r) : null; } catch { return null; }
-  }
-  try {
-    const hero = load<typeof defaultSections.hero>('hero');
-    if (hero) Object.assign(defaultSections.hero, hero);
-    const about = load<typeof defaultSections.about>('about');
-    if (about) Object.assign(defaultSections.about, about);
-    const sk = load<SkillCategory[]>('skills');
-    if (sk) { defaultSkillCategories.length = 0; defaultSkillCategories.push(...sk); defaultSections.skills.metadata = JSON.stringify({ categories: sk }); }
-    const proj = load<Project[]>('projects');
-    if (proj) { defaultProjects.length = 0; defaultProjects.push(...proj); }
-    const lnk = load<SocialLink[]>('links');
-    if (lnk) { defaultLinks.length = 0; defaultLinks.push(...lnk); }
-    const pub = load<Publication>('publication');
-    if (pub) Object.assign(defaultPublication, pub);
-    const rc = load<typeof resumeContact>('resumeContact');
-    if (rc) Object.assign(resumeContact, rc);
-    const re = load<ResumeExperience[]>('resumeExp');
-    if (re) { resumeExperiences.length = 0; resumeExperiences.push(...re); }
-    const red = load<ResumeEducation[]>('resumeEdu');
-    if (red) { resumeEducation.length = 0; resumeEducation.push(...red); }
-    const rl = load<ResumeLanguage[]>('resumeLang');
-    if (rl) { resumeLanguages.length = 0; resumeLanguages.push(...rl); }
-    const ra = load<ResumeAtout[]>('resumeAtouts');
-    if (ra) { resumeAtouts.length = 0; resumeAtouts.push(...ra); }
-  } catch { /* silent */ }
-})();

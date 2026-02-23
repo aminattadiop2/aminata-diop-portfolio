@@ -1,19 +1,20 @@
 import { motion } from 'motion/react';
 import { ExternalLink, Github, Star } from 'lucide-react';
 import SectionTitle from '../ui/SectionTitle';
-import { defaultProjects } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enProjects } from '../../i18n';
 
 export default function Projects() {
   const { lang } = useLanguage();
   const t = ui[lang].projects;
+  const { projects: siteProjects } = useSiteData();
 
   const projects = lang === 'en'
-    ? defaultProjects.map((p) => {
+    ? siteProjects.map((p) => {
         const en = enProjects.find((e) => e.id === p.id);
         return en ? { ...p, ...en } : p;
       })
-    : defaultProjects;
+    : siteProjects;
 
   return (
     <section id="projects" className="relative py-24 sm:py-32">

@@ -4,10 +4,7 @@ import {
   Download, ArrowLeft, Mail, MapPin, Phone, Github, Linkedin, Loader2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {
-  defaultSkillCategories, defaultLinks, resumeContact,
-  resumeExperiences, resumeEducation, resumeLanguages, resumeAtouts,
-} from '../data/defaults';
+import { useSiteData } from '../contexts/DataContext';
 import {
   useLanguage, ui,
   enHero, enSkillCategories, enResumeContact,
@@ -20,13 +17,14 @@ export default function Resume() {
   const { lang } = useLanguage();
   const t = ui[lang].resume;
   const isEn = lang === 'en';
+  const siteData = useSiteData();
 
-  const contact = isEn ? enResumeContact : resumeContact;
-  const experiences = isEn ? enResumeExperiences : resumeExperiences;
-  const education = isEn ? enResumeEducation : resumeEducation;
-  const languages = isEn ? enResumeLanguages : resumeLanguages;
-  const atouts = isEn ? enResumeAtouts : resumeAtouts;
-  const skillCats = isEn ? enSkillCategories : defaultSkillCategories;
+  const contact = isEn ? enResumeContact : siteData.resumeContact;
+  const experiences = isEn ? enResumeExperiences : siteData.resumeExperiences;
+  const education = isEn ? enResumeEducation : siteData.resumeEducation;
+  const languages = isEn ? enResumeLanguages : siteData.resumeLanguages;
+  const atouts = isEn ? enResumeAtouts : siteData.resumeAtouts;
+  const skillCats = isEn ? enSkillCategories : siteData.skillCategories;
   const subtitle = isEn ? enHero.subtitle : 'Consultante en IA appliquée · Cofondatrice SIMILI · Solutions appliquées & automatisation';
 
   const handleDownload = async () => {
@@ -223,7 +221,7 @@ export default function Resume() {
           {/* Links */}
           <div className="pt-4 border-t bdr-light">
             <div className="flex flex-wrap items-center gap-4 text-sm t-secondary">
-              {defaultLinks.map((link) => {
+              {siteData.links.map((link) => {
                 const icons: Record<string, React.ReactNode> = {
                   Github: <Github size={14} />,
                   Linkedin: <Linkedin size={14} />,

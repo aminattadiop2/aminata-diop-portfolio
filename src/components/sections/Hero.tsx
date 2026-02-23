@@ -1,19 +1,20 @@
 import { motion } from 'motion/react';
 import { ArrowDown, Download, Sparkles } from 'lucide-react';
 import { useTypewriter } from '../../hooks/useTypewriter';
-import { defaultSections } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enHero } from '../../i18n';
 
 export default function Hero() {
   const { lang } = useLanguage();
   const t = ui[lang].hero;
   const isEn = lang === 'en';
+  const { sections } = useSiteData();
 
-  const title = isEn ? enHero.title : defaultSections.hero.title;
-  const content = isEn ? enHero.content : defaultSections.hero.content;
+  const title = isEn ? enHero.title : sections.hero.title;
+  const content = isEn ? enHero.content : sections.hero.content;
   const roles = isEn
     ? enHero.roles
-    : (() => { try { return JSON.parse(defaultSections.hero.metadata || '{}').roles || []; } catch { return []; } })();
+    : (() => { try { return JSON.parse(sections.hero.metadata || '{}').roles || []; } catch { return []; } })();
 
   const typedRole = useTypewriter(roles, 80, 40, 2500);
 

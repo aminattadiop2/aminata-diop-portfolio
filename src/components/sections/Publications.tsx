@@ -1,13 +1,14 @@
 import { motion } from 'motion/react';
 import { FileText, Download, MapPin, Calendar, Users, BarChart3 } from 'lucide-react';
 import SectionTitle from '../ui/SectionTitle';
-import { defaultPublication } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enPublication } from '../../i18n';
 
 export default function Publications() {
   const { lang } = useLanguage();
   const t = ui[lang].publication;
-  const pub = lang === 'en' ? enPublication : defaultPublication;
+  const { publication } = useSiteData();
+  const pub = lang === 'en' ? enPublication : publication;
 
   return (
     <section id="publications" className="relative py-24 sm:py-32">

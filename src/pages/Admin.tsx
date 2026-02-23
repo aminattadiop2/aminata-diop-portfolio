@@ -6,34 +6,25 @@ import {
   Sparkles, Brain, BookOpen, FileText, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Project } from '../types';
-import {
-  defaultProjects, defaultSections, defaultLinks, defaultSkillCategories,
-  defaultPublication, resumeExperiences, resumeEducation, resumeLanguages,
-  resumeAtouts, resumeContact,
-  type Publication, type ResumeExperience, type ResumeEducation,
-  type ResumeLanguage, type ResumeAtout, type SkillCategory,
-} from '../data/defaults';
+import type { Project, SkillCategory } from '../types';
+import { useSiteData } from '../contexts/DataContext';
+import { api } from '../services/api';
+import type { Publication, ResumeExperience, ResumeEducation, ResumeLanguage, ResumeAtout } from '../data/defaults';
 
 type Tab = 'dashboard' | 'hero' | 'about' | 'skills' | 'projects' | 'publication' | 'cv' | 'links' | 'settings';
-
-const STORAGE_PREFIX = 'ad_';
-function saveToStorage(key: string, value: unknown) {
-  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); } catch { /* */ }
-}
 
 /* ─── Login ─── */
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const stored = localStorage.getItem('admin_password') || 'admin123';
-    if (password === stored) {
-      localStorage.setItem('admin_token', btoa(Date.now().toString()));
+    try {
+      const { token } = await api.login(password);
+      localStorage.setItem('admin_token', token);
       onLogin();
-    } else {
+    } catch {
       setError(true);
       setTimeout(() => setError(false), 2000);
     }
@@ -57,7 +48,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
           {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-sm flex items-center gap-1"><AlertCircle size={14} /> Mot de passe incorrect</motion.p>}
           <button type="submit" className="btn-primary w-full justify-center"><Lock size={16} /> Se connecter</button>
         </form>
-        <p className="text-xs t-tertiary text-center mt-6">Mot de passe par défaut : admin123 (à changer dans les paramètres)</p>
+        <p className="text-xs t-tertiary text-center mt-6">Mot de passe par défaut : admin123 (configurable via ADMIN_PASSWORD dans Cloudflare)</p>
       </motion.div>
     </div>
   );
@@ -132,118 +123,202 @@ function Collapsible({ title, defaultOpen, children }: { title: string; defaultO
 
 /* ─── Main ─── */
 export default function Admin() {
+  const siteData = useSiteData();
   const [authenticated, setAuthenticated] = useState(() => !!localStorage.getItem('admin_token'));
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [saving, setSaving] = useState(false);
   const showToast = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
 
   /* ── Hero state ── */
-  const heroMeta = (() => { try { return JSON.parse(defaultSections.hero.metadata || '{}'); } catch { return {}; } })();
-  const [heroTitle, setHeroTitle] = useState(defaultSections.hero.title);
-  const [heroSubtitle, setHeroSubtitle] = useState(defaultSections.hero.subtitle || '');
-  const [heroContent, setHeroContent] = useState(defaultSections.hero.content || '');
+  const heroMeta = (() => { try { return JSON.parse(siteData.sections.hero.metadata || '{}'); } catch { return {}; } })();
+  const [heroTitle, setHeroTitle] = useState(siteData.sections.hero.title);
+  const [heroSubtitle, setHeroSubtitle] = useState(siteData.sections.hero.subtitle || '');
+  const [heroContent, setHeroContent] = useState(siteData.sections.hero.content || '');
   const [heroRoles, setHeroRoles] = useState<string[]>(heroMeta.roles || []);
   const [heroCtaText, setHeroCtaText] = useState(heroMeta.cta_text || 'Voir mes projets');
 
   /* ── About state ── */
-  const aboutMeta = (() => { try { return JSON.parse(defaultSections.about.metadata || '{}'); } catch { return {}; } })();
-  const [aboutTitle, setAboutTitle] = useState(defaultSections.about.title);
-  const [aboutSubtitle, setAboutSubtitle] = useState(defaultSections.about.subtitle || '');
-  const [aboutContent, setAboutContent] = useState(defaultSections.about.content || '');
+  const aboutMeta = (() => { try { return JSON.parse(siteData.sections.about.metadata || '{}'); } catch { return {}; } })();
+  const [aboutTitle, setAboutTitle] = useState(siteData.sections.about.title);
+  const [aboutSubtitle, setAboutSubtitle] = useState(siteData.sections.about.subtitle || '');
+  const [aboutContent, setAboutContent] = useState(siteData.sections.about.content || '');
   const [aboutHighlights, setAboutHighlights] = useState<string[]>(aboutMeta.highlights || []);
 
   /* ── Skills state ── */
-  const [skills, setSkills] = useState<SkillCategory[]>(() => defaultSkillCategories.map((c) => ({ ...c, skills: [...c.skills] })));
+  const [skills, setSkills] = useState<SkillCategory[]>(() => siteData.skillCategories.map((c) => ({ ...c, skills: [...c.skills] })));
 
   /* ── Projects state ── */
-  const [projects, setProjects] = useState<Project[]>(() => defaultProjects.map((p) => ({ ...p })));
+  const [projects, setProjects] = useState<Project[]>(() => siteData.projects.map((p) => ({ ...p })));
 
   /* ── Publication state ── */
   const [pub, setPub] = useState<Publication>(() => ({
-    ...defaultPublication,
-    authors: [...defaultPublication.authors],
-    keywords: [...defaultPublication.keywords],
-    metrics: defaultPublication.metrics.map((m) => ({ ...m })),
+    ...siteData.publication,
+    authors: [...siteData.publication.authors],
+    keywords: [...siteData.publication.keywords],
+    metrics: siteData.publication.metrics.map((m) => ({ ...m })),
   }));
 
   /* ── CV state ── */
-  const [cvProfile, setCvProfile] = useState(resumeContact.profile);
-  const [cvEmail, setCvEmail] = useState(resumeContact.email);
-  const [cvLocation, setCvLocation] = useState(resumeContact.location);
-  const [cvPhone, setCvPhone] = useState(resumeContact.phone);
-  const [cvExp, setCvExp] = useState<ResumeExperience[]>(() => resumeExperiences.map((e) => ({ ...e, bullets: [...e.bullets] })));
-  const [cvEdu, setCvEdu] = useState<ResumeEducation[]>(() => resumeEducation.map((e) => ({ ...e, details: e.details ? [...e.details] : undefined })));
-  const [cvLangs, setCvLangs] = useState<ResumeLanguage[]>(() => resumeLanguages.map((l) => ({ ...l })));
-  const [cvAtouts, setCvAtouts] = useState<ResumeAtout[]>(() => resumeAtouts.map((a) => ({ ...a, items: [...a.items] })));
+  const [cvProfile, setCvProfile] = useState(siteData.resumeContact.profile);
+  const [cvEmail, setCvEmail] = useState(siteData.resumeContact.email);
+  const [cvLocation, setCvLocation] = useState(siteData.resumeContact.location);
+  const [cvPhone, setCvPhone] = useState(siteData.resumeContact.phone);
+  const [cvExp, setCvExp] = useState<ResumeExperience[]>(() => siteData.resumeExperiences.map((e) => ({ ...e, bullets: [...e.bullets] })));
+  const [cvEdu, setCvEdu] = useState<ResumeEducation[]>(() => siteData.resumeEducation.map((e) => ({ ...e, details: e.details ? [...e.details] : undefined })));
+  const [cvLangs, setCvLangs] = useState<ResumeLanguage[]>(() => siteData.resumeLanguages.map((l) => ({ ...l })));
+  const [cvAtouts, setCvAtouts] = useState<ResumeAtout[]>(() => siteData.resumeAtouts.map((a) => ({ ...a, items: [...a.items] })));
 
   /* ── Links state ── */
-  const [links, setLinks] = useState(() => defaultLinks.map((l) => ({ ...l })));
+  const [links, setLinks] = useState(() => siteData.links.map((l) => ({ ...l })));
 
-  /* ── Settings ── */
-  const [adminPassword, setAdminPassword] = useState('');
+  /* Sync state when siteData finishes loading from API */
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (!siteData.loading && !initialized) {
+      setInitialized(true);
+      const hm = (() => { try { return JSON.parse(siteData.sections.hero.metadata || '{}'); } catch { return {}; } })();
+      setHeroTitle(siteData.sections.hero.title);
+      setHeroSubtitle(siteData.sections.hero.subtitle || '');
+      setHeroContent(siteData.sections.hero.content || '');
+      setHeroRoles(hm.roles || []);
+      setHeroCtaText(hm.cta_text || 'Voir mes projets');
 
-  /* ── Save handlers ── */
-  const handleSaveHero = () => {
-    const meta = JSON.stringify({ roles: heroRoles, cta_text: heroCtaText, cv_url: '/resume' });
-    Object.assign(defaultSections.hero, { title: heroTitle, subtitle: heroSubtitle, content: heroContent, metadata: meta, updated_at: new Date().toISOString() });
-    saveToStorage('hero', defaultSections.hero);
-    showToast('Section Accueil sauvegardée !');
+      const am = (() => { try { return JSON.parse(siteData.sections.about.metadata || '{}'); } catch { return {}; } })();
+      setAboutTitle(siteData.sections.about.title);
+      setAboutSubtitle(siteData.sections.about.subtitle || '');
+      setAboutContent(siteData.sections.about.content || '');
+      setAboutHighlights(am.highlights || []);
+
+      setSkills(siteData.skillCategories.map((c) => ({ ...c, skills: [...c.skills] })));
+      setProjects(siteData.projects.map((p) => ({ ...p })));
+      setPub({
+        ...siteData.publication,
+        authors: [...siteData.publication.authors],
+        keywords: [...siteData.publication.keywords],
+        metrics: siteData.publication.metrics.map((m) => ({ ...m })),
+      });
+      setCvProfile(siteData.resumeContact.profile);
+      setCvEmail(siteData.resumeContact.email);
+      setCvLocation(siteData.resumeContact.location);
+      setCvPhone(siteData.resumeContact.phone);
+      setCvExp(siteData.resumeExperiences.map((e) => ({ ...e, bullets: [...e.bullets] })));
+      setCvEdu(siteData.resumeEducation.map((e) => ({ ...e, details: e.details ? [...e.details] : undefined })));
+      setCvLangs(siteData.resumeLanguages.map((l) => ({ ...l })));
+      setCvAtouts(siteData.resumeAtouts.map((a) => ({ ...a, items: [...a.items] })));
+      setLinks(siteData.links.map((l) => ({ ...l })));
+    }
+  }, [siteData.loading, initialized, siteData]);
+
+  /* ── Save handlers (API) ── */
+  const handleSaveHero = async () => {
+    setSaving(true);
+    try {
+      const meta = JSON.stringify({ roles: heroRoles, cta_text: heroCtaText, cv_url: '/resume' });
+      await api.updateSection({ id: 'hero', title: heroTitle, subtitle: heroSubtitle, content: heroContent, metadata: meta });
+      await siteData.refresh();
+      showToast('Section Accueil sauvegardée !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSaveAbout = () => {
-    const meta = JSON.stringify({ highlights: aboutHighlights });
-    Object.assign(defaultSections.about, { title: aboutTitle, subtitle: aboutSubtitle, content: aboutContent, metadata: meta, updated_at: new Date().toISOString() });
-    saveToStorage('about', defaultSections.about);
-    showToast('Section À propos sauvegardée !');
+  const handleSaveAbout = async () => {
+    setSaving(true);
+    try {
+      const meta = JSON.stringify({ highlights: aboutHighlights });
+      await api.updateSection({ id: 'about', title: aboutTitle, subtitle: aboutSubtitle, content: aboutContent, metadata: meta });
+      await siteData.refresh();
+      showToast('Section À propos sauvegardée !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSaveSkills = () => {
-    defaultSkillCategories.length = 0;
-    defaultSkillCategories.push(...skills);
-    defaultSections.skills.metadata = JSON.stringify({ categories: skills });
-    saveToStorage('skills', skills);
-    showToast('Compétences sauvegardées !');
+  const handleSaveSkills = async () => {
+    setSaving(true);
+    try {
+      const meta = JSON.stringify({ categories: skills });
+      await api.updateSection({ id: 'skills', metadata: meta });
+      await siteData.refresh();
+      showToast('Compétences sauvegardées !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSaveProjects = () => {
-    defaultProjects.length = 0;
-    defaultProjects.push(...projects);
-    saveToStorage('projects', projects);
-    showToast('Projets sauvegardés !');
+  const handleSaveProjects = async () => {
+    setSaving(true);
+    try {
+      const existingIds = new Set(siteData.projects.map((p) => p.id));
+      const currentIds = new Set(projects.map((p) => p.id));
+
+      const toDelete = siteData.projects.filter((p) => !currentIds.has(p.id));
+      for (const p of toDelete) await api.deleteProject(p.id);
+
+      for (const p of projects) {
+        if (existingIds.has(p.id)) {
+          await api.updateProject(p);
+        } else {
+          const { id: _oldId, created_at: _c, updated_at: _u, ...rest } = p;
+          const result = await api.createProject(rest);
+          p.id = result.id;
+        }
+      }
+
+      await siteData.refresh();
+      showToast('Projets sauvegardés !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSavePublication = () => {
-    Object.assign(defaultPublication, pub);
-    saveToStorage('publication', pub);
-    showToast('Publication sauvegardée !');
+  const handleSavePublication = async () => {
+    setSaving(true);
+    try {
+      await api.updateSettings({ publication: JSON.stringify(pub) });
+      await siteData.refresh();
+      showToast('Publication sauvegardée !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSaveCV = () => {
-    Object.assign(resumeContact, { profile: cvProfile, email: cvEmail, location: cvLocation, phone: cvPhone });
-    resumeExperiences.length = 0; resumeExperiences.push(...cvExp);
-    resumeEducation.length = 0; resumeEducation.push(...cvEdu);
-    resumeLanguages.length = 0; resumeLanguages.push(...cvLangs);
-    resumeAtouts.length = 0; resumeAtouts.push(...cvAtouts);
-    saveToStorage('resumeContact', resumeContact);
-    saveToStorage('resumeExp', cvExp);
-    saveToStorage('resumeEdu', cvEdu);
-    saveToStorage('resumeLang', cvLangs);
-    saveToStorage('resumeAtouts', cvAtouts);
-    showToast('CV sauvegardé !');
+  const handleSaveCV = async () => {
+    setSaving(true);
+    try {
+      const contact = { profile: cvProfile, email: cvEmail, location: cvLocation, phone: cvPhone };
+      await api.updateSettings({
+        resumeContact: JSON.stringify(contact),
+        resumeExp: JSON.stringify(cvExp),
+        resumeEdu: JSON.stringify(cvEdu),
+        resumeLang: JSON.stringify(cvLangs),
+        resumeAtouts: JSON.stringify(cvAtouts),
+      });
+      await siteData.refresh();
+      showToast('CV sauvegardé !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
-  const handleSaveLinks = () => {
-    defaultLinks.length = 0;
-    defaultLinks.push(...links);
-    saveToStorage('links', links);
-    showToast('Liens sauvegardés !');
-  };
+  const handleSaveLinks = async () => {
+    setSaving(true);
+    try {
+      const existingIds = new Set(siteData.links.map((l) => l.id));
+      const currentIds = new Set(links.map((l) => l.id));
 
-  const handleSavePassword = () => {
-    if (adminPassword.length < 4) { showToast('Le mot de passe doit faire au moins 4 caractères', 'error'); return; }
-    localStorage.setItem('admin_password', adminPassword);
-    setAdminPassword('');
-    showToast('Mot de passe modifié !');
+      const toDelete = siteData.links.filter((l) => !currentIds.has(l.id));
+      for (const l of toDelete) await api.deleteLink(l.id);
+
+      for (const l of links) {
+        if (existingIds.has(l.id)) {
+          await api.updateLink(l);
+        } else {
+          const { id: _oldId, ...rest } = l;
+          const result = await api.createLink(rest);
+          l.id = result.id;
+        }
+      }
+
+      await siteData.refresh();
+      showToast('Liens sauvegardés !');
+    } catch { showToast('Erreur de sauvegarde', 'error'); }
+    setSaving(false);
   };
 
   const handleLogout = () => { localStorage.removeItem('admin_token'); setAuthenticated(false); };
@@ -317,7 +392,7 @@ export default function Admin() {
                       <p className="t-secondary text-sm leading-relaxed">
                         Ici tu peux modifier l'intégralité du contenu de ton portfolio : section d'accueil, à propos, compétences,
                         projets, publication, CV complet (profil, expériences, formations, langues, atouts), liens sociaux et paramètres.
-                        Les modifications sont sauvegardées localement et appliquées en temps réel.
+                        Les modifications sont sauvegardées dans la base de données D1 et visibles par tous les visiteurs.
                       </p>
                     </div>
                   </div>
@@ -325,7 +400,7 @@ export default function Admin() {
 
                 {/* ── Hero ── */}
                 {activeTab === 'hero' && (
-                  <SectionCard title="Section Accueil (Hero)" actions={<button onClick={handleSaveHero} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
+                  <SectionCard title="Section Accueil (Hero)" actions={<button onClick={handleSaveHero} disabled={saving} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
                     <Field label="Nom affiché">
                       <input value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className="input-themed" />
                     </Field>
@@ -346,7 +421,7 @@ export default function Admin() {
 
                 {/* ── About ── */}
                 {activeTab === 'about' && (
-                  <SectionCard title="Section À Propos" actions={<button onClick={handleSaveAbout} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
+                  <SectionCard title="Section À Propos" actions={<button onClick={handleSaveAbout} disabled={saving} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <Field label="Titre">
                         <input value={aboutTitle} onChange={(e) => setAboutTitle(e.target.value)} className="input-themed" />
@@ -373,7 +448,7 @@ export default function Admin() {
                         <button onClick={() => setSkills([...skills, { name: 'Nouvelle catégorie', icon: 'Star', skills: [] }])} className="btn-secondary text-sm py-2 px-3">
                           <Plus size={16} /> Catégorie
                         </button>
-                        <button onClick={handleSaveSkills} className="btn-primary text-sm py-2 px-3">
+                        <button onClick={handleSaveSkills} disabled={saving} className="btn-primary text-sm py-2 px-3">
                           <Save size={16} /> Sauvegarder
                         </button>
                       </div>
@@ -413,7 +488,7 @@ export default function Admin() {
                             created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
                           }]);
                         }} className="btn-secondary text-sm py-2 px-3"><Plus size={16} /> Ajouter</button>
-                        <button onClick={handleSaveProjects} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder</button>
+                        <button onClick={handleSaveProjects} disabled={saving} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder</button>
                       </div>
                     </div>
                     {projects.map((project, pi) => (
@@ -453,7 +528,7 @@ export default function Admin() {
 
                 {/* ── Publication ── */}
                 {activeTab === 'publication' && (
-                  <SectionCard title="Publication scientifique" actions={<button onClick={handleSavePublication} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
+                  <SectionCard title="Publication scientifique" actions={<button onClick={handleSavePublication} disabled={saving} className="btn-primary text-sm"><Save size={16} /> Sauvegarder</button>}>
                     <Field label="Titre">
                       <input value={pub.title} onChange={(e) => setPub({ ...pub, title: e.target.value })} className="input-themed" />
                     </Field>
@@ -520,7 +595,7 @@ export default function Admin() {
                       <h3 className="font-heading text-lg font-bold t-primary">Curriculum Vitae</h3>
                       <div className="flex gap-2">
                         <Link to="/resume" className="btn-secondary text-sm py-2 px-3"><Eye size={16} /> Prévisualiser</Link>
-                        <button onClick={handleSaveCV} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder tout</button>
+                        <button onClick={handleSaveCV} disabled={saving} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder tout</button>
                       </div>
                     </div>
 
@@ -651,13 +726,13 @@ export default function Admin() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading text-lg font-bold t-primary">Liens sociaux</h3>
-                      <button onClick={handleSaveLinks} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder</button>
+                      <button onClick={handleSaveLinks} disabled={saving} className="btn-primary text-sm py-2 px-3"><Save size={16} /> Sauvegarder</button>
                     </div>
                     <div className="glass-card rounded-xl p-4 bg-accent-s/30 border bdr-accent">
                       <p className="text-sm font-medium t-primary mb-2">Comment configurer les liens</p>
                       <ul className="text-sm t-secondary space-y-1 list-disc list-inside">
                         <li><strong className="t-primary">Plateforme</strong> : nom affiché (ex. Email, LinkedIn, GitHub).</li>
-                        <li><strong className="t-primary">URL</strong> : adresse complète — pour l’email utilisez <code className="text-xs bg-fill-s px-1 rounded">mailto:votre@email.com</code>, pour les réseaux <code className="text-xs bg-fill-s px-1 rounded">https://...</code>.</li>
+                        <li><strong className="t-primary">URL</strong> : adresse complète — pour l'email utilisez <code className="text-xs bg-fill-s px-1 rounded">mailto:votre@email.com</code>, pour les réseaux <code className="text-xs bg-fill-s px-1 rounded">https://...</code>.</li>
                         <li><strong className="t-primary">Icône</strong> : nom exact parmi <code className="text-xs bg-fill-s px-1 rounded">Github</code>, <code className="text-xs bg-fill-s px-1 rounded">Linkedin</code>, <code className="text-xs bg-fill-s px-1 rounded">Mail</code> (casse respectée).</li>
                       </ul>
                     </div>
@@ -682,19 +757,11 @@ export default function Admin() {
                 {/* ── Settings ── */}
                 {activeTab === 'settings' && (
                   <div className="space-y-6">
-                    <SectionCard title="Changer le mot de passe">
-                      <input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Nouveau mot de passe" className="input-themed max-w-md" />
-                      <button onClick={handleSavePassword} className="btn-primary text-sm"><Save size={16} /> Changer</button>
-                    </SectionCard>
-                    <SectionCard title="Réinitialiser les données">
-                      <p className="text-sm t-secondary">Supprimer toutes les modifications sauvegardées et revenir aux valeurs par défaut.</p>
-                      <button onClick={() => {
-                        const keys = ['hero', 'about', 'skills', 'projects', 'links', 'publication', 'resumeContact', 'resumeExp', 'resumeEdu', 'resumeLang', 'resumeAtouts'];
-                        keys.forEach((k) => localStorage.removeItem(STORAGE_PREFIX + k));
-                        showToast('Données réinitialisées. Rechargez la page pour appliquer.');
-                      }} className="btn-secondary text-sm text-red-400 border-red-500/20 hover:border-red-500/40">
-                        <Trash2 size={16} /> Réinitialiser
-                      </button>
+                    <SectionCard title="Informations">
+                      <p className="text-sm t-secondary leading-relaxed">
+                        Le mot de passe admin est configuré via la variable d'environnement <code className="text-xs bg-fill-s px-1 rounded t-accent">ADMIN_PASSWORD</code> dans les paramètres Cloudflare Pages.
+                        Par défaut : <code className="text-xs bg-fill-s px-1 rounded">admin123</code>.
+                      </p>
                     </SectionCard>
                     <SectionCard title="Déploiement Cloudflare">
                       <div className="text-sm t-secondary space-y-2">
@@ -702,7 +769,7 @@ export default function Admin() {
                         <ol className="list-decimal list-inside space-y-1 t-tertiary">
                           <li>Créez une base D1 : <code className="t-accent">wrangler d1 create aminata-diop-db</code></li>
                           <li>Copiez l'ID dans <code className="t-accent">wrangler.toml</code></li>
-                          <li>Appliquez le schéma : <code className="t-accent">wrangler d1 execute aminata-diop-db --file=migrations/0001_init.sql</code></li>
+                          <li>Appliquez le schéma : <code className="t-accent">wrangler d1 execute aminata-diop-db --remote --file=migrations/0001_init.sql</code></li>
                           <li>Déployez : <code className="t-accent">npm run deploy</code></li>
                         </ol>
                       </div>

@@ -1,7 +1,6 @@
 import { Heart, ArrowUp, Github, Linkedin, Mail } from 'lucide-react';
-import { defaultLinks } from '../../data/defaults';
+import { useSiteData } from '../../contexts/DataContext';
 import { useLanguage, ui, enHero } from '../../i18n';
-import { defaultSections } from '../../data/defaults';
 
 const iconMap: Record<string, React.ReactNode> = {
   Github: <Github size={18} />,
@@ -13,7 +12,8 @@ export default function Footer() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const { lang } = useLanguage();
   const t = ui[lang].footer;
-  const subtitle = lang === 'en' ? enHero.subtitle : (defaultSections.hero.subtitle || '');
+  const { sections, links: defaultLinks } = useSiteData();
+  const subtitle = lang === 'en' ? enHero.subtitle : (sections.hero.subtitle || '');
 
   return (
     <footer className="relative border-t bdr-light bg-page">
