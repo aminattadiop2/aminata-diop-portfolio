@@ -48,7 +48,7 @@ export default function Resume() {
       await new Promise((r) => setTimeout(r, 100));
 
       const canvas = await html2canvas(el, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
@@ -112,8 +112,8 @@ export default function Resume() {
         const ctx = pageCanvas.getContext('2d');
         if (ctx) ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
 
-        const pageImg = pageCanvas.toDataURL('image/png');
-        pdf.addImage(pageImg, 'PNG', margin, margin, contentW, drawH);
+        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.75);
+        pdf.addImage(pageImg, 'JPEG', margin, margin, contentW, drawH);
         srcY += srcH;
         page++;
       }
