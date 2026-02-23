@@ -241,6 +241,40 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   PDF capture — styles temporaires pendant la génération
+   ═══════════════════════════════════════════════════════════ */
+
+.pdf-capture {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.pdf-capture,
+.pdf-capture * {
+  color: #1d1d1f !important;
+  --text-primary: #1d1d1f;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --accent: #007AFF;
+  --border-light: #e5e7eb;
+  --bg-secondary: #f9fafb;
+  --fill-secondary: #f3f4f6;
+}
+.pdf-capture .t-primary   { color: #1d1d1f !important; }
+.pdf-capture .t-secondary { color: #4b5563 !important; }
+.pdf-capture .t-tertiary  { color: #6b7280 !important; }
+.pdf-capture .t-accent    { color: #007AFF !important; }
+.pdf-capture .gradient-text { color: #1d1d1f !important; }
+.pdf-capture .border-b,
+.pdf-capture .border-t { border-color: #e5e7eb !important; }
+.pdf-capture .glass-card:hover { transform: none !important; }
+
+.pdf-capture .space-y-8 > * + * { margin-top: 1.25rem !important; }
+.pdf-capture .space-y-6 > * + * { margin-top: 1rem !important; }
+.pdf-capture .space-y-4 > * + * { margin-top: 0.75rem !important; }
+
+/* ═══════════════════════════════════════════════════════════
    Print — CV identique à l'affichage écran
    ═══════════════════════════════════════════════════════════ */
 

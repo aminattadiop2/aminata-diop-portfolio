@@ -38,42 +38,83 @@ export default function Resume() {
       ]);
 
       const el = cvRef.current;
+
+      const origStyle = el.getAttribute('style') || '';
+      el.style.width = '680px';
+      el.style.maxWidth = '680px';
+      el.style.padding = '32px';
+      el.classList.add('pdf-capture');
+
+      await new Promise((r) => setTimeout(r, 100));
+
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         logging: false,
       });
 
-      const imgW = canvas.width;
-      const imgH = canvas.height;
+      el.setAttribute('style', origStyle);
+      el.classList.remove('pdf-capture');
+
       const pdfW = 210;
       const pdfH = 297;
-      const margin = 10;
+      const margin = 8;
       const contentW = pdfW - margin * 2;
-      const ratio = contentW / imgW;
-      const scaledH = imgH * ratio;
+      const ratio = contentW / canvas.width;
+
+      const fullCtx = canvas.getContext('2d', { willReadFrequently: true })!;
+      const maxPageSrcH = Math.floor((pdfH - margin * 2) / ratio);
+      const searchRange = Math.floor(maxPageSrcH * 0.15);
+
+      function isBlankRow(y: number): boolean {
+        if (y < 0 || y >= canvas.height) return false;
+        const row = fullCtx.getImageData(0, y, canvas.width, 1).data;
+        for (let x = 0; x < canvas.width * 4; x += 4) {
+          if (row[x] < 240 || row[x + 1] < 240 || row[x + 2] < 240) return false;
+        }
+        return true;
+      }
+
+      function findSafeCut(idealY: number): number {
+        const clampedIdeal = Math.min(idealY, canvas.height);
+        for (let offset = 0; offset <= searchRange; offset++) {
+          const above = clampedIdeal - offset;
+          if (above > 0 && isBlankRow(above) && isBlankRow(above - 1)) return above;
+          const below = clampedIdeal + offset;
+          if (below < canvas.height && isBlankRow(below) && isBlankRow(below + 1)) return below;
+        }
+        return clampedIdeal;
+      }
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      let yOffset = 0;
+      let srcY = 0;
       let page = 0;
 
-      while (yOffset < scaledH) {
+      while (srcY < canvas.height) {
         if (page > 0) pdf.addPage();
-        const pageContentH = pdfH - margin * 2;
-        const srcY = yOffset / ratio;
-        const srcH = Math.min(pageContentH / ratio, imgH - srcY);
+        const remaining = canvas.height - srcY;
+        let srcH: number;
+
+        if (remaining <= maxPageSrcH) {
+          srcH = remaining;
+        } else {
+          const cutY = findSafeCut(srcY + maxPageSrcH);
+          srcH = cutY - srcY;
+          if (srcH < maxPageSrcH * 0.5) srcH = maxPageSrcH;
+        }
+
         const drawH = srcH * ratio;
 
         const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = imgW;
+        pageCanvas.width = canvas.width;
         pageCanvas.height = Math.ceil(srcH);
         const ctx = pageCanvas.getContext('2d');
-        if (ctx) ctx.drawImage(canvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
+        if (ctx) ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
 
         const pageImg = pageCanvas.toDataURL('image/png');
         pdf.addImage(pageImg, 'PNG', margin, margin, contentW, drawH);
-        yOffset += drawH;
+        srcY += srcH;
         page++;
       }
 
