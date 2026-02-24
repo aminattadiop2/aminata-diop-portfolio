@@ -223,22 +223,14 @@ export const enResumeEducation: ResumeEducation[] = [
     ],
   },
   {
-    diploma: 'Comparative evaluation of non-Quebec diplomas',
+    diploma: 'Comparative Evaluation of Non-Quebec Diplomas',
     institution: 'MIFI',
     period: '2024',
     location: 'Montréal, QC, Canada',
-  },
-  {
-    diploma: 'Secondary education teaching diploma',
-    institution: 'Dakar, Senegal',
-    period: '—',
-    location: 'Quebec equivalent: DES and one year of pre-university college studies completed',
-  },
-  {
-    diploma: "Bachelor's in Computer Science",
-    institution: 'Dakar, Senegal',
-    period: '—',
-    location: "Quebec equivalent: Bachelor's in Computer Science",
+    details: [
+      'Secondary education teaching diploma (Dakar, Senegal) ⇒ Quebec equivalent: DES and one year of pre-university college studies completed.',
+      "Bachelor's in Computer Science (Dakar, Senegal) ⇒ Quebec equivalent: Bachelor's in Computer Science.",
+    ],
   },
 ];
 

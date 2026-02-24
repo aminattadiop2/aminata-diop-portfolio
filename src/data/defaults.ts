@@ -364,18 +364,10 @@ export const resumeEducation: ResumeEducation[] = [
     institution: 'MIFI',
     period: '2024',
     location: 'Montréal, QC, Canada',
-  },
-  {
-    diploma: 'Bachelière de l\'enseignement du second degré',
-    institution: 'Dakar, Sénégal',
-    period: '—',
-    location: 'Repère scolaire québécois : DES et une année d\'études collégiales préuniversitaires réussie',
-  },
-  {
-    diploma: 'Licence en Informatique',
-    institution: 'Dakar, Sénégal',
-    period: '—',
-    location: 'Repère scolaire québécois : Baccalauréat en Sciences de l\'informatique',
+    details: [
+      'Bachelière de l\'enseignement du second degré (Dakar, Sénégal) ⇒ Repère scolaire québécois : DES et une année d\'études collégiales préuniversitaires réussie.',
+      'Licence en Informatique (Dakar, Sénégal) ⇒ Repère scolaire québécois : Baccalauréat en Sciences de l\'informatique.',
+    ],
   },
 ];
 
